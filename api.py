@@ -70,7 +70,7 @@ async def get_code_snippet_by_id(item_id: str):
 
 # Get by name of the coder or language
 @app.get('/code-snippet')
-async def get_code_snippet_by_name(coder_name: Optional[str] = None, 
+async def get_code_snippet_by_query_params(coder_name: Optional[str] = None, 
                                    prog_language: Optional[str] = None):
     try:
         cursor = collection.find()
@@ -113,6 +113,8 @@ async def update_code_snippet(code_snippet_id: str, data: CodeSnippet):
         collection.find_one_and_update({"_id": ObjectId(code_snippet_id)}, {
             "$set": dict(data)
         })
+        
+        # Return a response when a code snippet data is successfully updated in the database
         return [
             {"message": "Successfully updated code snippet data" },
             dict(data),
@@ -130,6 +132,7 @@ async def delete_code_snippet(code_snippet_id: str):
         item = collection.find_one_and_delete({"_id": object_id})
         item["_id"] = str(item["_id"])
         
+        # Return a response when a code snippet data is successfully deleted in the database
         return [
             {"Message": "Successfully deleted code snippet data"}, dict(item)
         ] if item else {"Message": "No code snippet data found for deletion"}
