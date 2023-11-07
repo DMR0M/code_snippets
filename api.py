@@ -23,6 +23,7 @@ def convert_obj_id_to_str(data_list: list[dict]):
 class CodeSnippet(BaseModel):
     coder: str
     language: str
+    description: str
     code_snippet: str
     created: str
 
@@ -54,11 +55,9 @@ async def get_code_snippet_by_id(item_id: str):
     try:
         object_id  = ObjectId(item_id)
         item = collection.find_one({"_id": object_id})
-        if item is None:
-            raise HTTPException(status_code=404, detail="Item not found")  # Return a 404 response for not found items
         item["_id"] = str(item["_id"])
         
-        return item
+        return item if item else {"Message": "No Code Snippet Found"}
     
     except Exception as e:
         return {"Message": f"Error: {str(e)}"}
