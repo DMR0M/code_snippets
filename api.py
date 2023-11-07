@@ -30,7 +30,7 @@ class CodeSnippet(BaseModel):
 
 @app.get('/')
 async def home():
-    return {"Message": "Hello World!"}
+    return {"Message": "Welcome to Code Snippet API"}
 
 
 # Get all code snippets
@@ -55,9 +55,14 @@ async def get_code_snippet_by_id(item_id: str):
     try:
         object_id  = ObjectId(item_id)
         item = collection.find_one({"_id": object_id})
-        item["_id"] = str(item["_id"])
         
-        return item if item else {"Message": "No Code Snippet Found"}
+        # If there is a data retrieved
+        if item:
+            item["_id"] = str(item["_id"])
+            return item
+        
+        # If there is no data retrieved
+        return {"Message": "No code snippet data found"}
     
     except Exception as e:
         return {"Message": f"Error: {str(e)}"}
@@ -73,34 +78,65 @@ async def get_code_snippet_by_name(coder_name: Optional[str] = None,
             doc 
             for doc in cursor 
             if coder_name in doc.values() or 
-               prog_language.title() in doc.values()
+               prog_language in doc.values()
         ]
         
         # Convert ObjectID type to string
         convert_obj_id_to_str(filtered)
         
-        return filtered if filtered else {"Message": "No Code Snippets Found"}
+        return filtered if filtered else {"Message": "No code snippets data found"}
         
     except Exception as e:
         return {"Message": f"Error: {str(e)}"}
     
     
-# Insert data
+# Insert code snippet data
 @app.post('/create-code-snippet')
 async def create_code_snippet(data: CodeSnippet):
     try:
         collection.insert_one(dict(data))
-        result = collection.insert_one(data)
         
-        # Return a response when a code snippet data is successfully inserted to database
-        return {"message": "Code snippet created", "inserted_id": str(result.inserted_id)}
+        # Return a response when a code snippet data is successfully inserted to the database
+        return [
+            {"message": "Successfully created code snippet data" },
+            dict(data),
+        ]
     
     except Exception as e:
         return {"Message": f"Error: {str(e)}"}
 
 
-# Update data
-
+# Update code snippet data
+@app.put('/update-code-snippet/{code_snippet_id}')
+async def update_code_snippet(code_snippet_id: str, data: CodeSnippet):
+    try:
+        collection.find_one_and_update({"_id": ObjectId(code_snippet_id)}, {
+            "$set": dict(data)
+        })
+        return [
+            {"message": "Successfully updated code snippet data" },
+            dict(data),
+        ]
+        
+    except Exception as e:
+        return {"Message": f"Error: {str(e)}"}
+    
+    
+# Delete code snippet data
+@app.delete('/delete-code-snippet/{code_snippet_id}')
+async def delete_code_snippet(code_snippet_id: str):
+    try:
+        object_id  = ObjectId(code_snippet_id)
+        item = collection.find_one_and_delete({"_id": object_id})
+        item["_id"] = str(item["_id"])
+        
+        return [
+            {"Message": "Successfully deleted code snippet data"}, dict(item)
+        ] if item else {"Message": "No code snippet data found for deletion"}
+    
+    except Exception as e:
+        return {"Message": f"Error: {str(e)}"}
+    
 
 def main():
     import uvicorn
